@@ -1,1 +1,1 @@
-'#VibratoAnalysis' 
+#VibratoAnalysis
