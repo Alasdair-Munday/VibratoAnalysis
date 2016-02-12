@@ -3,9 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <title>VibratoAnalysis</title>
+    <script src="FrequencyReader/PitchDetect.js"></script>
+    <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css">
 </head>
-<body>
-
-
+<body class="container-fluid">
+    <h1>Vibrato Analysis System</h1>
+    <div>
+        <div class="col-sm-6">
+            <canvas id="waveform" width="512" height="256"></canvas>
+        </div>
+        <div class="col-sm-6">
+            <canvas id="Fo" width="512" height="256"></canvas>
+        </div>
+    </div>
+    <button class="btn btn-primary" onclick="toggleLiveInput()">listen</button>
 </body>
 </html>
