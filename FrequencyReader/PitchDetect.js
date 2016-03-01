@@ -12,6 +12,12 @@ var mediaStreamSource = null;
 var waveCanvas,
     freqCanvas;
 
+var sourceNode =  null;
+
+var isPlaying = false;
+
+var sampleNoteBuffer = null;
+
 var freqPos = 0;
 
 window.onload = function() {
@@ -31,6 +37,21 @@ window.onload = function() {
         freqCanvas.strokeStyle = "black";
         freqCanvas.lineWidth = 1;
     }
+
+    var request = new XMLHttpRequest();
+    request.open("GET", "153769__carlos-vaquero__violoncello-d-4-tenuto-vibrato.wav",true);
+    request.responseType = "arraybuffer";
+    request.onload = function (){
+        audioContext.decodeAudioData(request.response, function(buffer){
+            sampleNoteBuffer = buffer;
+            console.log("file loaded");
+            playAudioSample();
+
+
+        })
+    };
+    request.send();
+
 
 };
 
@@ -62,19 +83,41 @@ function gotStream(stream) {
 }
 
 
+
 function toggleLiveInput() {
-    getUserMedia(
-        {
-            "audio": {
-                "mandatory": {
-                    "googEchoCancellation": "false",
-                    "googAutoGainControl": "false",
-                    "googNoiseSuppression": "false",
-                    "googHighpassFilter": "false"
-                },
-                "optional": []
-            }
-        }, gotStream);
+    if(!isPlaying) {
+        getUserMedia(
+            {
+                "audio": {
+                    "mandatory": {
+                        "googEchoCancellation": "false",
+                        "googAutoGainControl": "false",
+                        "googNoiseSuppression": "false",
+                        "googHighpassFilter": "false"
+                    },
+                    "optional": []
+                }
+            }, gotStream);
+        isPlaying = true;
+    }
+}
+
+function playAudioSample(){
+    sourceNode = audioContext.createBufferSource();
+    sourceNode.buffer = sampleNoteBuffer;
+    sourceNode.loop = true;
+
+    analyser = audioContext.createAnalyser();
+    analyser.fftSize = 2048;
+    sourceNode.connect( analyser );
+
+    analyser.connect(audioContext.destination);
+
+    sourceNode.start(0);
+
+    updatePitch();
+
+
 }
 
 
@@ -156,11 +199,20 @@ function autoCorrelate( buf, sampleRate ) {
 //	var best_frequency = sampleRate/best_offset;
 }
 
-var ac, ac1;
+
+var filterLength = 20;
+var freqBuff = new Array(filterLength).fill(0);
+var buffIndex = 0;
+var ac,ac1;
 function updatePitch( time ) {
     analyser.getFloatTimeDomainData( buf );
+
+    freqBuff[buffIndex] = autoCorrelate( buf, audioContext.sampleRate );
+
+    buffIndex = (buffIndex +1 ) % filterLength;
+
     ac1 = ac;
-    ac = autoCorrelate( buf, audioContext.sampleRate );
+    ac = freqBuff.reduce(function(a,b){return a+b})/filterLength;
 
     waveCanvas.clearRect(0,0,512,256);
     waveCanvas.strokeStyle = "red";
@@ -185,15 +237,15 @@ function updatePitch( time ) {
     }
     waveCanvas.stroke();
 
-    if(ac != -1 && (-10 < ac1-ac) && (ac1-ac < 10)){
+    if(ac != -1){
         freqCanvas.beginPath();
-        freqCanvas.moveTo(freqPos,256-ac1);
-        freqCanvas.lineTo(freqPos+1,256-ac);
+        freqCanvas.moveTo(freqPos,512-ac1/5);
+        freqCanvas.lineTo(freqPos+1,512-ac/5);
         freqCanvas.stroke();
         freqPos++;
         if(freqPos==512){
             freqPos=0;
-            freqCanvas.clearRect(0,0,512,256);
+            freqCanvas.clearRect(0,0,512,512);
         }
     }
 
