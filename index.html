@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>VibratoAnalysis</title>
+    <script src="bower_components/jquery/dist/jquery.js"></script>
     <script src="FrequencyReader/PitchDetect.js"></script>
     <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css">
 </head>
@@ -15,7 +16,11 @@
         <div class="col-sm-6">
             <canvas id="Fo" width="512" height="512"></canvas>
         </div>
+        <div class="col-sm-6">
+            <canvas id="acf" width="512" height="512"></canvas>
+        </div>
     </div>
     <button class="btn btn-primary" onclick="toggleLiveInput()">listen</button>
+    <button class="btn btn-primary" onclick="togglePause()">Pause</button>
 </body>
 </html>

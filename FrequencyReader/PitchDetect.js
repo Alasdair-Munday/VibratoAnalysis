@@ -20,6 +20,11 @@ var sampleNoteBuffer = null;
 
 var freqPos = 0;
 
+var recordedFreqs = [];
+var recordedFreqsSecond = new Array(100).fill(0);
+
+var freqCallbackId;
+
 window.onload = function() {
     audioContext = new AudioContext();
     MAX_SIZE = Math.max(4,Math.floor(audioContext.sampleRate/5000));	// corresponds to a 5kHz signal
@@ -82,6 +87,18 @@ function gotStream(stream) {
     updatePitch();
 }
 
+function togglePause(){
+    if(isPlaying){
+        sourceNode.stop();
+        window.cancelAnimationFrame(rafID);
+        isPlaying = false;
+        clearInterval(freqCallbackId)
+
+    }else{
+        playAudioSample();
+    }
+
+}
 
 
 function toggleLiveInput() {
@@ -107,16 +124,30 @@ function playAudioSample(){
     sourceNode.buffer = sampleNoteBuffer;
     sourceNode.loop = true;
 
+    var lpf = audioContext.createBiquadFilter();
+
+    lpf.type = 'lowpass';
+    lpf.frequency = 1000;
+
+    sourceNode.connect(lpf);
+
+    var gain = audioContext.createGain();
+
+    gain.gain.value = 1.5;
+
+    lpf.connect(gain);
+
     analyser = audioContext.createAnalyser();
     analyser.fftSize = 2048;
-    sourceNode.connect( analyser );
+    gain.connect( analyser );
 
     analyser.connect(audioContext.destination);
 
     sourceNode.start(0);
-
+    isPlaying = true;
     updatePitch();
 
+    freqCallbackId = setInterval(getFreq,1);
 
 }
 
@@ -153,12 +184,17 @@ function autoCorrelate( buf, sampleRate ) {
     var foundGoodCorrelation = false;
     var correlations = new Array(MAX_SAMPLES);
 
+
+    //find the rms amplitude of the buffer
     for (var i=0;i<SIZE;i++) {
         var val = buf[i];
-        rms += val*val;
+        rms += val * val;
     }
     rms = Math.sqrt(rms/SIZE);
-    if (rms<0.01) // not enough signal
+
+
+    //the signal level is too low, return -1 (freq not found)
+    if (rms<0.01)
         return -1;
 
     var lastCorrelation=1;
@@ -170,6 +206,8 @@ function autoCorrelate( buf, sampleRate ) {
         }
         correlation = 1 - (correlation/MAX_SAMPLES);
         correlations[offset] = correlation; // store it, for the tweaking we need to do below.
+
+
         if ((correlation>0.9) && (correlation > lastCorrelation)) {
             foundGoodCorrelation = true;
             if (correlation > best_correlation) {
@@ -177,15 +215,6 @@ function autoCorrelate( buf, sampleRate ) {
                 best_offset = offset;
             }
         } else if (foundGoodCorrelation) {
-            // short-circuit - we found a good correlation, then a bad one, so we'd just be seeing copies from here.
-            // Now we need to tweak the offset - by interpolating between the values to the left and right of the
-            // best offset, and shifting it a bit.  This is complex, and HACKY in this code (happy to take PRs!) -
-            // we need to do a curve fit on correlations[] around best_offset in order to better determine precise
-            // (anti-aliased) offset.
-
-            // we know best_offset >=1,
-            // since foundGoodCorrelation cannot go to true until the second pass (offset=1), and
-            // we can't drop into this clause until the following pass (else if).
             var shift = (correlations[best_offset+1] - correlations[best_offset-1])/correlations[best_offset];
             return sampleRate/(best_offset+(8*shift));
         }
@@ -200,34 +229,10 @@ function autoCorrelate( buf, sampleRate ) {
 }
 
 
-var filterLength = 20;
-var freqBuff = new Array(filterLength).fill(0);
-var buffIndex = 0;
-var ac,ac1;
+
 function updatePitch( time ) {
-    analyser.getFloatTimeDomainData( buf );
-
-    freqBuff[buffIndex] = autoCorrelate( buf, audioContext.sampleRate );
-
-    buffIndex = (buffIndex +1 ) % filterLength;
-
-    ac1 = ac;
-    ac = freqBuff.reduce(function(a,b){return a+b})/filterLength;
-
+    analyser.getFloatTimeDomainData(buf);
     waveCanvas.clearRect(0,0,512,256);
-    waveCanvas.strokeStyle = "red";
-    waveCanvas.beginPath();
-    waveCanvas.moveTo(0,0);
-    waveCanvas.lineTo(0,256);
-    waveCanvas.moveTo(128,0);
-    waveCanvas.lineTo(128,256);
-    waveCanvas.moveTo(256,0);
-    waveCanvas.lineTo(256,256);
-    waveCanvas.moveTo(384,0);
-    waveCanvas.lineTo(384,256);
-    waveCanvas.moveTo(512,0);
-    waveCanvas.lineTo(512,256);
-    waveCanvas.stroke();
     waveCanvas.strokeStyle = "black";
     waveCanvas.beginPath();
     waveCanvas.moveTo(0,buf[0]);
@@ -237,19 +242,49 @@ function updatePitch( time ) {
     }
     waveCanvas.stroke();
 
-    if(ac != -1){
-        freqCanvas.beginPath();
-        freqCanvas.moveTo(freqPos,512-ac1/5);
-        freqCanvas.lineTo(freqPos+1,512-ac/5);
-        freqCanvas.stroke();
-        freqPos++;
-        if(freqPos==512){
-            freqPos=0;
-            freqCanvas.clearRect(0,0,512,512);
-        }
-    }
 
+    console.log("vibrato rate:" + autoCorrelate(recordedFreqsSecond,100));
+
+
+    $.each(recordedFreqs, function(i,f){
+        if(f != -1){
+            freqCanvas.beginPath();
+            freqCanvas.moveTo(freqPos,512-recordedFreqs[i-1]/5);
+            freqCanvas.lineTo(freqPos+1,512-f/5);
+            freqCanvas.stroke();
+            freqPos++;
+            if(freqPos==512){
+                freqPos=0;
+                freqCanvas.clearRect(0,0,512,512);
+            }
+        }
+    });
+    recordedFreqs = [ac];
     if (!window.requestAnimationFrame)
         window.requestAnimationFrame = window.webkitRequestAnimationFrame;
     rafID = window.requestAnimationFrame( updatePitch );
+}
+
+//Fills frequencybufferBetweenScreens
+
+var filterLength = 3;
+var freqBuff = new Array(filterLength).fill(0);
+var buffIndex = 0;
+var ac,ac1;
+var rfsindex = 0;
+function getFreq(){
+    analyser.getFloatTimeDomainData( buf );
+    freqBuff[buffIndex] = autoCorrelate( buf, audioContext.sampleRate );
+
+    buffIndex = (buffIndex +1 ) % filterLength;
+
+    ac1 = ac;
+    //get average from filter buffer for next frequency values
+    ac = freqBuff.reduce(function(a,b){return a+b})/filterLength;
+
+    recordedFreqs.push(ac);
+    recordedFreqsSecond[rfsindex++%100] = ac;
+
+
+
 }
