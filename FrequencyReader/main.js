@@ -30,7 +30,7 @@ window.onload = function() {
     audioContext = new AudioContext();
 
     acfCanvas = document.getElementById('acf').getContext("2d");
-    acfCanvas.strokeStyle = "green";
+    acfCanvas.strokeStyle = "#D5D5D5";
     acfCanvas.lineWidth = 3;
 
     var request = new XMLHttpRequest();
@@ -130,7 +130,7 @@ function toggleOsc(){
 
     vib.frequency.value = 6; //hz
     vib.connect(vibGain);
-    vibGain.gain.value = 20;
+    vibGain.gain.value = 3;
     vibGain.connect(osc.frequency);
 
     vib.start();

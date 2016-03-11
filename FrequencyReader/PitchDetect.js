@@ -10,6 +10,21 @@ var tracks = null;
 var buflen = 2048;
 var buf = new Float32Array( buflen );
 var MIN_SAMPLES = 0;  // will be initialized when AudioContext is created.
+
+
+var noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+function noteFromFrequency( frequency ) {
+    var note = {};
+
+    note.frequencyActual = frequency;
+    note.number =  Math.round( 12 * (Math.log( frequency / 440 )/Math.log(2) ) ) + 69;
+    note.frequencyIntended = 440 * Math.pow(2,(note.number -69)/12);
+    note.name = noteNames[note.number%12];
+    note.centsOut = Math.floor( 1200 * Math.log( frequency / note.frequencyIntended)/Math.log(2) );
+
+    return note;
+}
+
 function updatePitch( time ) {
 
     //get data for plots
@@ -18,11 +33,16 @@ function updatePitch( time ) {
     var freqs = recordedFreqsSecond.slice((rfsindex+1) % freqBufferLength, recordedFreqsSecond.length - 1);
     freqs = freqs.concat(recordedFreqsSecond.slice(0,rfsindex % freqBufferLength));
 
+    var note = noteFromFrequency(freqs[freqs.length-1]);
+    $('#note').html(note.name );
+    $('#freq').html(note.frequencyActual.toFixed() +"Hz");
+
     var vibrato = getVibrato(freqs,freqBufferSampleRate);
     if(vibrato.rate >0) {
         $('#vibrato-rate').html("Vibrato Rate:" + vibrato.rate.toFixed(2) + "Hz");
-        $('#vibrato-amount').html("Vibrato Amount:" + vibrato.amount.toFixed(2) +"Hz")
+        $('#vibrato-amount').html("Vibrato Amount:" + vibrato.amount +"c")
     }
+
 
     acfCanvas.clearRect(0,0,512,512);
 
@@ -66,4 +86,8 @@ function getFreq(){
 
     recordedFreqsSecond[rfsindex++ % freqBufferLength] = ac;
 
+
+
 }
+
+
