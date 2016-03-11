@@ -46,8 +46,6 @@ function updatePitch( time ) {
     acfCanvas.stroke();
     waveCanvas.stroke();
 
-
-
     if (!window.requestAnimationFrame)
         window.requestAnimationFrame = window.webkitRequestAnimationFrame;
     rafID = window.requestAnimationFrame( updatePitch );
