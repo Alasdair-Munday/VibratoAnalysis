@@ -16,12 +16,6 @@ function autoCorrelate( buf, sampleRate, minFreq, maxFreq ) {
     var correlations = new Array(MAX_SAMPLES);
 
 
-    $.each(buf, function(i,sample){
-        if(Math.abs(sample) <rms)
-            buf[i] = 0;
-    });
-
-
     //find the rms amplitude of the buffer
     for (var i=0;i<SIZE;i++) {
         var val = buf[i];

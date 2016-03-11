@@ -20,31 +20,24 @@ function updatePitch( time ) {
 
     var vibrato = getVibrato(freqs,freqBufferSampleRate);
     if(vibrato.rate >0) {
-        $('#vibrato-rate').html("vibrato rate:" + vibrato.rate);
-        $('#vibrato-amount').html("vibrato amount:" + vibrato.amount)
+        $('#vibrato-rate').html("Vibrato Rate:" + vibrato.rate.toFixed(2) + "Hz");
+        $('#vibrato-amount').html("Vibrato Amount:" + vibrato.amount.toFixed(2) +"Hz")
     }
-
-    //setup canvases
-    waveCanvas.clearRect(0,0,512,256);
-    waveCanvas.beginPath();
-    waveCanvas.moveTo(0,buf[0]);
 
     acfCanvas.clearRect(0,0,512,512);
-    acfCanvas.beginPath();
-    acfCanvas.moveTo(0,buf[0]);
+
 
     //calculate the sample period of the frequency buffer in terms of canvas pixels
-    var step = freqBufferLength/512;
+    var step = 512/freqBufferLength;
 
 
+    acfCanvas.moveTo(0,vibrato.buffer[0]);
+    acfCanvas.beginPath();
     //plot the graphs
-    for (var i=1;i<512;i++) {
-        waveCanvas.lineTo(i,128+(buf[i]*128));
-
-        acfCanvas.lineTo(i, 128 - vibrato.buffer[Math.floor(i*step)]*128);
+    for (var i=0;i< freqBufferLength;i++) {
+        acfCanvas.lineTo(i*step, 128 - vibrato.buffer[Math.floor(i)]*128);
     }
     acfCanvas.stroke();
-    waveCanvas.stroke();
 
     if (!window.requestAnimationFrame)
         window.requestAnimationFrame = window.webkitRequestAnimationFrame;
@@ -59,6 +52,7 @@ var ac,ac1;
 var rfsindex = 0;
 function getFreq(){
     analyser.getFloatTimeDomainData( buf );
+
     freqBuff[buffIndex] = autoCorrelate( buf, audioContext.sampleRate );
 
     buffIndex = (buffIndex +1 ) % filterLength;

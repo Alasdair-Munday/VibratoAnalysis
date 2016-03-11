@@ -6,20 +6,14 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
 var audioContext = null;
 var analyser = null;
-var DEBUGCANVAS = null;
-var FCANVAS = null;
 var mediaStreamSource = null;
-var waveCanvas,
-    freqCanvas,
-    acfCanvas;
+var acfCanvas;
 
 var sourceNode =  null;
 
 var isPlaying = false;
 
 var sampleNoteBuffer = null;
-
-var freqPos = 0;
 
 var recordedFreqs = [];
 
@@ -34,21 +28,6 @@ var freqCallbackId;
 
 window.onload = function() {
     audioContext = new AudioContext();
-    MAX_SIZE = Math.max(4,Math.floor(audioContext.sampleRate/5000));	// corresponds to a 5kHz signal
-
-    DEBUGCANVAS = document.getElementById( "waveform" );
-    if (DEBUGCANVAS) {
-        waveCanvas = DEBUGCANVAS.getContext("2d");
-        waveCanvas.strokeStyle = '#FF00FF';
-        waveCanvas.lineWidth = 3;
-    }
-
-    FCANVAS = document.getElementById("Fo");
-    if (FCANVAS) {
-        freqCanvas = FCANVAS.getContext("2d");
-        freqCanvas.strokeStyle = "green";
-        freqCanvas.lineWidth = 3;
-    }
 
     acfCanvas = document.getElementById('acf').getContext("2d");
     acfCanvas.strokeStyle = "green";

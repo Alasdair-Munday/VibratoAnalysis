@@ -13,24 +13,28 @@
 </head>
 <body class="container-fluid">
     <h1 class="text-center">Vibrato Analysis System</h1>
-    <div class="pull-right">
+    <div class="col-sm-12 text-center">
         <button class="btn btn-default" onclick="toggleLiveInput()">listen</button>
         <button class="btn btn-default" onclick="togglePause()">Sample</button>
         <button class="btn btn-default" onclick="toggleOsc()">Oscillator</button>
     </div>
 
-    <div class="col-sm-6">
-        <p id="vibrato-rate"></p>
-        <p id="vibrato-amount"></p>
+    <div class="col-sm-12">
+        <div class="text-center col-sm-6">
+            <h3 id="vibrato-rate"></h3>
+        </div>
+        <div class=" text-center col-sm-6">
+            <h3 id="vibrato-amount"></h3>
+        </div>
     </div>
     <div>
-        <div class="col-sm-12 text-center">
-            <canvas id="waveform" width="512" height="256"></canvas>
-        </div>
+        <!--<div class="col-sm-12 text-center">-->
+            <!--<canvas id="waveform" width="512" height="256"></canvas>-->
+        <!--</div>-->
         <!--<div class="col-sm-12">-->
             <!--<canvas id="Fo" width="512" height="512"></canvas>-->
         <!--</div>-->
-        <div class="col-sm-12 text-center">
+        <div class="col-sm-12 text-center thumbnail">
             <canvas id="acf" width="512" height="256"></canvas>
         </div>
     </div>
