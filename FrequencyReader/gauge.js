@@ -52,7 +52,7 @@ function Gauge(parent, data, max, min, name){
 
         this.text.text(this.label + ": " + data.toFixed(2));
         this.arc.transition()
-            .duration(10)
+            .duration(100)
             .call(gaugeTween,angle);
 
         return this;

@@ -3,7 +3,10 @@
  */
 
 
-
+var amountMax = 120;
+var amountMin = 0;
+var rateMax = 10;
+var rateMin = 3.5;
 
 var rafID = null;
 var tracks = null;
@@ -17,8 +20,8 @@ $(document).ready(function(){
     var rateEl = document.getElementById('rate-gauge');
     var amountEl = document.getElementById('amount-gauge');
 
-    rateGauge = new Gauge(d3.select(rateEl), 0, 10, 3.5,"Rate");
-    amountGauge = new Gauge(d3.select(amountEl),0, 120,0, "Amount" )
+    rateGauge = new Gauge(d3.select(rateEl), 0, rateMax, rateMin,"Rate");
+    amountGauge = new Gauge(d3.select(amountEl),0, amountMax,amountMin, "Amount" )
 
 });
 
@@ -52,6 +55,7 @@ function updatePitch( time ) {
     if(vibrato.rate >0) {
         rateGauge.setData(vibrato.rate);
         amountGauge.setData(vibrato.amount);
+        setBallPos(vibrato.rate, vibrato.amount);
     }
 
 

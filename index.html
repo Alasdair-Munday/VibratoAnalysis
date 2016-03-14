@@ -10,35 +10,44 @@
     <script src="FrequencyReader/gauge.js"></script>
     <script src="FrequencyReader/PitchDetect.js"></script>
     <script src="FrequencyReader/sources.js"></script>
+    <script src="golf.js"></script>
     <!--<link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css">-->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="container-fluid">
     <h1 class="text-center">Vibrato Analysis System</h1>
+    <input type="file" id="soundFile" onchange="loadFile(this)">
+    <audio id="sound" loop></audio>
+
     <div class="col-sm-12 text-center">
         <button class="btn btn-default" onclick="toggleLiveInput()">listen</button>
         <button class="btn btn-default" onclick="togglePause()">Sample</button>
         <button class="btn btn-default" onclick="toggleOsc()">Oscillator</button>
+        <button class="btn btn-default" onclick="playUploadedFile()">File</button>
 
     </div>
 
     <div class="col-sm-12">
         <div class="text-center col-sm-3 col-sm-offset-2" id="rate-gauge">
-            <h3 id="vibrato-rate"></h3>
+            <!--Vibrato Rate Gauge-->
         </div>
         <div id="tuner" class="col-sm-2 text-center">
+            <!--Note and frequency values are pasted here-->
             <h2 id="note"></h2>
             <h5 id="freq"></h5>
         </div>
         <div class=" text-center col-sm-3" id="amount-gauge">
-            <h3 id="vibrato-amount"></h3>
+            <!--Vibrato Amount Gauge-->
         </div>
     </div>
     <div>
         <div class="col-sm-12 text-center">
-            <canvas class="thumbnail" id="acf" width="512" height="256" style="background: #9d9d9d; display: inline-block"></canvas>
+            <canvas class="thumbnail" id="acf" width="512" height="256" style="background: #B5C6C4; display: inline-block"></canvas>
         </div>
+    </div>
+    <div id="golf" class="text-center">
+        <!--Golf game is drawn here-->
     </div>
 </body>
 </html>

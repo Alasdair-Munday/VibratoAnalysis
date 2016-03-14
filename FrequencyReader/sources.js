@@ -14,11 +14,13 @@ var sourceNode =  null;
 var isPlaying = false;
 
 var sampleNoteBuffer = null;
+var uploadedAudioFile = null;
+var audioElement = null;
 
 var recordedFreqs = [];
 
 var freqBufferLength = 50;
-var freqBufferPeriod = 10;
+var freqBufferPeriod = 20;
 var freqBufferSampleRate = 1/(freqBufferPeriod/1000);
 
 
@@ -30,11 +32,11 @@ window.onload = function() {
     audioContext = new AudioContext();
 
     acfCanvas = document.getElementById('acf').getContext("2d");
-    acfCanvas.strokeStyle = "#D5D5D5";
+    acfCanvas.strokeStyle = "#FFF";
     acfCanvas.lineWidth = 3;
 
     var request = new XMLHttpRequest();
-    request.open("GET", "153769__carlos-vaquero__violoncello-d-4-tenuto-vibrato.wav",true);
+    request.open("GET", "247561__bwv662__overall-quality-of-single-note-cello-g4.wav",true);
     request.responseType = "arraybuffer";
     request.onload = function (){
         audioContext.decodeAudioData(request.response, function(buffer){
@@ -46,7 +48,23 @@ window.onload = function() {
     request.send();
 
 
+
 };
+
+function loadFile(obj) {
+    audioElement = new Audio();
+    audioElement.loop = true;
+    audioElement.crossOrigin = 'anonymous';
+    var reader = new FileReader();
+    reader.onload =  function(e) {
+            audioElement.src = e.target.result;
+        };
+    reader.addEventListener('load', function() {
+        //load sound file to audio buffer
+        uploadedAudioFile = audioContext.createMediaElementSource(audioElement);
+    });
+    reader.readAsDataURL(obj.files[0]);
+}
 
 function error() {
     alert('Stream generation failed.');
@@ -140,7 +158,8 @@ function toggleOsc(){
 
     osc.connect(amp);
 
-    // amp.connect(audioContext.destination);
+
+    amp.connect(audioContext.destination);
     updatePitch();
 
 
@@ -177,4 +196,26 @@ function playAudioSample(){
 
     freqCallbackId = setInterval(getFreq,freqBufferPeriod);
 
+}
+
+function playUploadedFile(){
+    sourceNode = uploadedAudioFile;
+    sourceNode.loop = true;
+
+    var gain = audioContext.createGain();
+    gain.gain.value = 1.5;
+
+    sourceNode.connect(gain);
+
+    analyser = audioContext.createAnalyser();
+    analyser.fftSize = 2048;
+    gain.connect( analyser );
+
+    analyser.connect(audioContext.destination);
+
+    audioElement.play();
+    isPlaying = true;
+    updatePitch();
+
+    freqCallbackId = setInterval(getFreq,freqBufferPeriod);
 }
