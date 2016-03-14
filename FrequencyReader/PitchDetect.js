@@ -11,6 +11,17 @@ var buflen = 2048;
 var buf = new Float32Array( buflen );
 var MIN_SAMPLES = 0;  // will be initialized when AudioContext is created.
 
+var rateGauge, amountGauge;
+
+$(document).ready(function(){
+    var rateEl = document.getElementById('rate-gauge');
+    var amountEl = document.getElementById('amount-gauge');
+
+    rateGauge = new Gauge(d3.select(rateEl), 0, 10, 3.5,"Rate");
+    amountGauge = new Gauge(d3.select(amountEl),0, 120,0, "Amount" )
+
+});
+
 
 var noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 function noteFromFrequency( frequency ) {
@@ -39,8 +50,8 @@ function updatePitch( time ) {
 
     var vibrato = getVibrato(freqs,freqBufferSampleRate);
     if(vibrato.rate >0) {
-        $('#vibrato-rate').html("Vibrato Rate:" + vibrato.rate.toFixed(2) + "Hz");
-        $('#vibrato-amount').html("Vibrato Amount:" + vibrato.amount +"c")
+        rateGauge.setData(vibrato.rate);
+        amountGauge.setData(vibrato.amount);
     }
 
 
