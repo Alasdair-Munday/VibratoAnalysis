@@ -3,7 +3,7 @@
  */
 
 
-var amountMax = 120;
+var amountMax = 60;
 var amountMin = 0;
 var rateMax = 10;
 var rateMin = 3.5;

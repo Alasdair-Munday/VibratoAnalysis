@@ -66,7 +66,9 @@ function getVibrato(buffer, sampleRate){
     var max = Math.max.apply(null,buffer);
     var min = Math.min.apply(null,buffer);
     vib.amountHz = max - min; //Hz
-    vib.amount = Math.floor( 1200 * Math.log( max / min)/Math.log(2) );
+    vib.amount = 1200 * Math.log2( max / min);
+
+
 
     //find centre
     var avg = (min+max)/2;

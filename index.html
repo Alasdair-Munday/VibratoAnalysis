@@ -28,25 +28,32 @@
 
     </div>
 
-    <div class="col-sm-12">
-        <div class="text-center col-sm-3 col-sm-offset-2" id="rate-gauge">
-            <!--Vibrato Rate Gauge-->
+    <ul class="nav nav-tabs">
+        <li role="presentation" onclick="setView('readout')" id="readout-tab" class="active"><a href="#">Readout</a></li>
+        <li role="presentation" onclick="setView('golf')" id="golf-tab"><a href="#">Golf</a></li>
+    </ul>
+
+    <div id="readout">
+        <div class="col-sm-12">
+            <div class="text-center col-sm-3 col-sm-offset-2" id="rate-gauge">
+                <!--Vibrato Rate Gauge-->
+            </div>
+            <div id="tuner" class="col-sm-2 text-center">
+                <!--Note and frequency values are pasted here-->
+                <h2 id="note"></h2>
+                <h5 id="freq"></h5>
+            </div>
+            <div class=" text-center col-sm-3" id="amount-gauge">
+                <!--Vibrato Amount Gauge-->
+            </div>
         </div>
-        <div id="tuner" class="col-sm-2 text-center">
-            <!--Note and frequency values are pasted here-->
-            <h2 id="note"></h2>
-            <h5 id="freq"></h5>
-        </div>
-        <div class=" text-center col-sm-3" id="amount-gauge">
-            <!--Vibrato Amount Gauge-->
+        <div>
+            <div class="col-sm-12 text-center">
+                <canvas class="thumbnail" id="acf" width="512" height="256" style="background: #B5C6C4; display: inline-block"></canvas>
+            </div>
         </div>
     </div>
-    <div>
-        <div class="col-sm-12 text-center">
-            <canvas class="thumbnail" id="acf" width="512" height="256" style="background: #B5C6C4; display: inline-block"></canvas>
-        </div>
-    </div>
-    <div id="golf" class="text-center">
+    <div id="golf" class="text-center" style="padding: 5px;">
         <!--Golf game is drawn here-->
     </div>
 </body>

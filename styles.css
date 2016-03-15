@@ -1,4 +1,12 @@
 body{
-    background-color: #5D8680;
+    background-color: #5d8680;
     color: #fff;
+}
+
+.nav-tabs>li a{
+    color: #fff;
+}
+
+.nav-tabs>li.active a{
+    color: #333333;
 }

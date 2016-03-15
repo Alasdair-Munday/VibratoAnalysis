@@ -27,6 +27,13 @@ function Gauge(parent, data, max, min, name){
         .append("g")
         .attr("transform", "translate("+ this.width/2 + ","+this.height/2+")");
 
+
+    this.svg.append("circle")
+        .attr("r",(this.diameter - this.padding)/2)
+        .style("fill","#5D8680")
+        .style("stroke","#B5C6C4")
+        .style("stroke-width", this.padding);
+
     this.arc = this.svg.append("path")
         .datum({endAngle:0})
         .attr("class", "rateGauge")
@@ -48,7 +55,7 @@ function Gauge(parent, data, max, min, name){
             this.max = max;
 
         var centre = (this.min + this.max) /2;
-        var angle = ( Math.PI / (this.max - centre))* (data - centre);
+        var angle = ( Math.PI / (this.max - centre))* (data - this.min);
 
         this.text.text(this.label + ": " + data.toFixed(2));
         this.arc.transition()

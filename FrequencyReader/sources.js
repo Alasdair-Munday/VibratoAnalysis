@@ -19,7 +19,7 @@ var audioElement = null;
 
 var recordedFreqs = [];
 
-var freqBufferLength = 50;
+var freqBufferLength = 30;
 var freqBufferPeriod = 20;
 var freqBufferSampleRate = 1/(freqBufferPeriod/1000);
 
@@ -47,9 +47,23 @@ window.onload = function() {
     };
     request.send();
 
-
+    $("#golf").hide();
 
 };
+
+function setView(viewString){
+    if(viewString == "readout"){
+        $("#readout-tab").addClass("active");
+        $("#golf-tab").removeClass("active");
+        $("#golf").hide();
+        $("#readout").show();
+    }else{
+        $("#readout-tab").removeClass("active");
+        $("#golf-tab").addClass("active");
+        $("#golf").show();
+        $("#readout").hide();
+    }
+}
 
 function loadFile(obj) {
     audioElement = new Audio();
