@@ -6,7 +6,6 @@ function autoCorrelate( buf, sampleRate, minFreq, maxFreq ) {
     var maxPeriod = Math.floor(sampleRate/minFreq);
     var minPeriod = Math.floor(sampleRate/maxFreq);
 
-
     var SIZE = buf.length;
     var MAX_SAMPLES = Math.floor(SIZE/2);
     var best_offset = -1;
@@ -14,7 +13,6 @@ function autoCorrelate( buf, sampleRate, minFreq, maxFreq ) {
     var rms = 0;
     var foundGoodCorrelation = false;
     var correlations = new Array(MAX_SAMPLES);
-
 
     //find the rms amplitude of the buffer
     for (var i=0;i<SIZE;i++) {
@@ -55,20 +53,15 @@ function autoCorrelate( buf, sampleRate, minFreq, maxFreq ) {
         return sampleRate/best_offset;
     }
     return -1;
-//	var best_frequency = sampleRate/best_offset;
 }
 
 function getVibrato(buffer, sampleRate){
-    //find average value
     var vib = {};
 
-    //find range
     var max = Math.max.apply(null,buffer);
     var min = Math.min.apply(null,buffer);
     vib.amountHz = max - min; //Hz
     vib.amount = 1200 * Math.log2( max / min);
-
-
 
     //find centre
     var avg = (min+max)/2;
@@ -81,7 +74,6 @@ function getVibrato(buffer, sampleRate){
 
     //autocorrelate transformed buffer
     vib.rate =  autoCorrelate(buffer,sampleRate, 4, 10);
-
     vib.buffer = buffer;
 
     //return vibrato object
