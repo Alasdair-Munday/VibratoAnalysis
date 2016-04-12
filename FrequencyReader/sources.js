@@ -18,11 +18,9 @@ var analyser = null;
 var gain = null;
 var mediaStreamSource = null;
 var waveCanvas;
-var sourceNode =  null;
 var isPlaying = false;
 var uploadedAudioFile = null;
 var audioElement = null;
-var recordedFreqs = [];
 var freqBufferLength = 30;
 var freqBufferPeriod = 20;
 var freqBufferSampleRate = 1/(freqBufferPeriod/1000);
@@ -161,19 +159,25 @@ function createOsc(){
 }
 
 function playUploadedFile(){
+
     if(isPlaying){
+        //pause the audio
         audioElement.pause();
+        //stop updating frequency
         clearInterval(freqCallbackId);
         isPlaying=false;
-        sourceNode.disconnect();
+        //disconnect the audio from the analyser
+        uploadedAudioFile.disconnect();
     }else{
-        sourceNode = uploadedAudioFile;
-        sourceNode.loop = true;
-        sourceNode.connect(gain);
+        //connect the audio element's node to the analyser
+        uploadedAudioFile.connect(gain);
         gain.gain.value=0.9;
 
+        //play the audio file
         audioElement.play();
         isPlaying = true;
+
+        //start detecting vibrato
         startPitchDetection();
     }
 
