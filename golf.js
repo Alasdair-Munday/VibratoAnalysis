@@ -7,6 +7,7 @@ var pitch;
 var svg;
 var width = 900;
 var height = 500;
+var target = {};
 
 $(document).ready(function(){
     svg = d3.select(document.getElementById('golf'))
@@ -61,17 +62,24 @@ $(document).ready(function(){
         .attr("r",25)
         .style('fill',"#fff");
 
-
-    setHolePos(6,18)
+    newGoal();
 });
 
 
 function setBallPos(freq, amount){
     setCirclePosition(ball, freq,amount);
+
+    if(freq.toFixed(1) == target.freq.toFixed(1) && amount.toFixed(1) == target.amount.toFixed(1)){
+        newGoal();
+    }
 }
 
 function setHolePos(freq,amount){
     setCirclePosition(hole,freq,amount);
+    target.freq = freq;
+    target.amount = amount;
+
+
 }
 
 function setCirclePosition(obj,freq,amount){
@@ -82,4 +90,11 @@ function setCirclePosition(obj,freq,amount){
     obj.transition().duration(100)
         .attr("cx",xpos)
         .attr("cy",height-ypos);
+}
+
+
+function newGoal (){
+    var randomFreq = Math.random() * (rateMax - rateMin) + rateMin;
+    var randomAmount = Math.random() * (amountMax - amountMin) + amountMin;
+    setHolePos(randomFreq,randomAmount);
 }

@@ -1,4 +1,7 @@
 /**
+ *
+ * This file handles all the DSP required to process the vibrato
+ *
  * Created by alasd on 12/02/2016.
  */
 
@@ -7,6 +10,8 @@ var amountMax = 60;
 var amountMin = 0;
 var rateMax = 10;
 var rateMin = 3.5;
+
+var freqCallbackId;
 
 var rafID = null;
 var tracks = null;
@@ -31,7 +36,7 @@ function noteFromFrequency( frequency ) {
     var note = {};
 
     note.frequencyActual = frequency;
-    note.number =  Math.round( 12 * (Math.log( frequency / 440 )/Math.log(2) ) ) + 69;
+    note.number =  Math.round( 12 * Math.log2(frequency / 440)) + 69;
     note.frequencyIntended = 440 * Math.pow(2,(note.number -69)/12);
     note.name = noteNames[note.number%12];
     note.centsOut = Math.floor( 1200 * Math.log( frequency / note.frequencyIntended)/Math.log(2) );
@@ -39,8 +44,14 @@ function noteFromFrequency( frequency ) {
     return note;
 }
 
-function updatePitch( time ) {
+function startPitchDetection(){
+    clearInterval(freqCallbackId);
+    freqCallbackId = setInterval(getFreq,freqBufferPeriod);
+    window.cancelAnimationFrame(rafID);
+    updatePitch();
+}
 
+function updatePitch( time ) {
     //get data for plots
     analyser.getFloatTimeDomainData(buf);
 
@@ -58,25 +69,24 @@ function updatePitch( time ) {
         setBallPos(vibrato.rate, vibrato.amount);
     }
 
-
-    acfCanvas.clearRect(0,0,512,512);
-
+    waveCanvas.clearRect(0,0,512,512);
 
     //calculate the sample period of the frequency buffer in terms of canvas pixels
     var step = 512/freqBufferLength;
 
 
-    acfCanvas.moveTo(0,vibrato.buffer[0]);
-    acfCanvas.beginPath();
+    waveCanvas.moveTo(0,vibrato.buffer[0]);
+    waveCanvas.beginPath();
     //plot the graphs
     for (var i=0;i< freqBufferLength;i++) {
-        acfCanvas.lineTo(i*step, 128 - vibrato.buffer[Math.floor(i)]*128);
+        waveCanvas.lineTo(i*step, 128 - vibrato.buffer[Math.floor(i)]*128);
     }
-    acfCanvas.stroke();
+    waveCanvas.stroke();
 
     if (!window.requestAnimationFrame)
         window.requestAnimationFrame = window.webkitRequestAnimationFrame;
-    rafID = window.requestAnimationFrame( updatePitch );
+
+    window.requestAnimationFrame( updatePitch );
 }
 
 
@@ -100,8 +110,6 @@ function getFreq(){
         recordedFreqs.push(ac);
 
     recordedFreqsSecond[rfsindex++ % freqBufferLength] = ac;
-
-
 
 }
 

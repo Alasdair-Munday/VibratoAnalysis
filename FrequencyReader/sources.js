@@ -1,63 +1,74 @@
 /**
+ *
+ * This File Handles setting up the different audio sources and processing button clicks on the view.
+ *
  * Created by alasdairmunday on 10/03/16.
  */
 
+//compatibility fix for safari
 window.AudioContext = window.AudioContext || window.webkitAudioContext;
+navigator.getUserMedia =
+    navigator.getUserMedia ||
+    navigator.webkitGetUserMedia ||
+    navigator.mozGetUserMedia;
 
+//declare global variables
 var audioContext = null;
 var analyser = null;
+var gain = null;
 var mediaStreamSource = null;
-var acfCanvas;
-
+var waveCanvas;
 var sourceNode =  null;
-
 var isPlaying = false;
-
-var sampleNoteBuffer = null;
 var uploadedAudioFile = null;
 var audioElement = null;
-
 var recordedFreqs = [];
-
 var freqBufferLength = 30;
 var freqBufferPeriod = 20;
 var freqBufferSampleRate = 1/(freqBufferPeriod/1000);
-
-
 var recordedFreqsSecond = new Array(freqBufferLength).fill(0);
+var oscPlaying = false;
+var osc = null;
+var exampleUrl = "247561__bwv662__overall-quality-of-single-note-cello-g4.wav";
 
-var freqCallbackId;
-
+//script to run when page loads
 window.onload = function() {
+
+    //create audiocontext object
     audioContext = new AudioContext();
 
-    acfCanvas = document.getElementById('acf').getContext("2d");
-    acfCanvas.strokeStyle = "#FFF";
-    acfCanvas.lineWidth = 3;
+    //locate audio element
+    audioElement = document.getElementById("audioPlayer");
+    //setup example sound file
+    audioElement.src= exampleUrl;
+    //web audio node from audio element
+    uploadedAudioFile = audioContext.createMediaElementSource(audioElement);
 
-    var request = new XMLHttpRequest();
-    request.open("GET", "247561__bwv662__overall-quality-of-single-note-cello-g4.wav",true);
-    request.responseType = "arraybuffer";
-    request.onload = function (){
-        audioContext.decodeAudioData(request.response, function(buffer){
-            sampleNoteBuffer = buffer;
-            console.log("file loaded");
+    //setup styling for waveform canvas
+    waveCanvas = document.getElementById('waveform').getContext("2d");
+    waveCanvas.strokeStyle = "#FFF";
+    waveCanvas.lineWidth = 3;
 
-        })
-    };
-    request.send();
 
-    $("#golf").hide();
+    //setup the analyser for the sources to connect to
+    gain = audioContext.createGain();
+    analyser = audioContext.createAnalyser();
+    analyser.fftSize = 2048;
+    gain.connect( analyser );
+    analyser.connect(audioContext.destination);
 
 };
 
+//Function called when changing tab
 function setView(viewString){
     if(viewString == "readout"){
+        //show readout and hide golf
         $("#readout-tab").addClass("active");
         $("#golf-tab").removeClass("active");
         $("#golf").hide();
         $("#readout").show();
     }else{
+        //show golf and hide readout
         $("#readout-tab").removeClass("active");
         $("#golf-tab").addClass("active");
         $("#golf").show();
@@ -65,72 +76,16 @@ function setView(viewString){
     }
 }
 
+//function called when selected file changes
 function loadFile(obj) {
-    audioElement = new Audio();
-    audioElement.loop = true;
-    audioElement.crossOrigin = 'anonymous';
-    var reader = new FileReader();
-    reader.onload =  function(e) {
-            audioElement.src = e.target.result;
-        };
-    reader.addEventListener('load', function() {
-        //load sound file to audio buffer
-        uploadedAudioFile = audioContext.createMediaElementSource(audioElement);
-    });
-    reader.readAsDataURL(obj.files[0]);
+    //create url for linked file and write it to the src attribute of the audio tag
+    audioElement.src = URL.createObjectURL(obj.files[0]);
 }
-
-function error() {
-    alert('Stream generation failed.');
-}
-
-function getUserMedia(dictionary, callback) {
-    try {
-        navigator.getUserMedia =
-            navigator.getUserMedia ||
-            navigator.webkitGetUserMedia ||
-            navigator.mozGetUserMedia;
-        navigator.getUserMedia(dictionary, callback, error);
-    } catch (e) {
-        alert('getUserMedia threw exception :' + e);
-    }
-}
-
-function gotStream(stream) {
-    // Create an AudioNode from the stream.
-    mediaStreamSource = audioContext.createMediaStreamSource(stream);
-
-    var noiseReduction = audioContext.createBiquadFilter();
-
-    noiseReduction.type = 'lowpass';
-    noiseReduction.frequency = 800;
-
-    // Connect it to the destination.
-    analyser = audioContext.createAnalyser();
-    analyser.fftSize = 2048;
-    mediaStreamSource.connect( analyser );
-    updatePitch();
-    freqCallbackId = setInterval(getFreq,freqBufferPeriod);
-
-}
-
-function togglePause(){
-    if(isPlaying){
-        sourceNode.stop();
-        window.cancelAnimationFrame(rafID);
-        isPlaying = false;
-        clearInterval(freqCallbackId)
-
-    }else{
-        playAudioSample();
-    }
-
-}
-
 
 function toggleLiveInput() {
     if(!isPlaying) {
-        getUserMedia(
+        //get microphone input
+        navigator.getUserMedia(
             {
                 "audio": {
                     "mandatory": {
@@ -141,95 +96,85 @@ function toggleLiveInput() {
                     },
                     "optional": []
                 }
-            }, gotStream);
-        isPlaying = true;
+            }, gotStream, error);
+    }else{
+        clearInterval(freqCallbackId);
+        mediaStreamSource.disconnect();
+        isPlaying = false;
     }
 }
 
-function toggleOsc(){
-    var osc = audioContext.createOscillator();
-    osc.frequency.value = 250;
-
-    osc.type = 'sawtooth';
-
-    analyser = audioContext.createAnalyser();
-    analyser.fftSize = 2048;
-    osc.connect( analyser );
-    osc.start();
-
-    var vib = audioContext.createOscillator();
-    var vibGain = audioContext.createGain();
-
-    vib.frequency.value = 6; //hz
-    vib.connect(vibGain);
-    vibGain.gain.value = 3;
-    vibGain.connect(osc.frequency);
-
-    vib.start();
-
-    var amp = audioContext.createGain();
-    amp.gain.value = 0.1;
-
-    osc.connect(amp);
-
-
-    amp.connect(audioContext.destination);
-    updatePitch();
-
-
-    freqCallbackId = setInterval(getFreq,freqBufferPeriod);
-
+//called when microphone could not be obtained
+function error() {
+    alert("Could not access microphone. Make sure you are using chrome and your url starts with https://");
 }
 
-function playAudioSample(){
-    sourceNode = audioContext.createBufferSource();
-    sourceNode.buffer = sampleNoteBuffer;
-    sourceNode.loop = true;
+//called when microphone successfully obtained
+function gotStream(stream) {
+    // Create an AudioNode from the stream.
+    mediaStreamSource = audioContext.createMediaStreamSource(stream);
+    //connect the microphone to the analyser
+    mediaStreamSource.connect( gain );
 
-    var lpf = audioContext.createBiquadFilter();
-
-    lpf.type = 'lowpass';
-    lpf.frequency = 1000;
-
-    var gain = audioContext.createGain();
-    gain.gain.value = 1.5;
-
-    sourceNode.connect(gain);
-
-    //lpf.connect(gain);
-
-    analyser = audioContext.createAnalyser();
-    analyser.fftSize = 2048;
-    gain.connect( analyser );
-
-    analyser.connect(audioContext.destination);
-
-    sourceNode.start(0);
+    //start detecting vibrato
+    startPitchDetection();
     isPlaying = true;
-    updatePitch();
+}
 
-    freqCallbackId = setInterval(getFreq,freqBufferPeriod);
+function toggleOsc(){
+    //start an oscilator if there isnt one playing
+    if(!oscPlaying){
+        //if an osc hasnt been made, create one
+        if(!osc)
+            createOsc();
 
+        //connect the osc to the output
+        osc.connect(gain);
+        //make sure the volume is safe for the high gain output
+        gain.gain.value = 0.3;
+        //start analysing pitch
+        startPitchDetection();
+        oscPlaying = true;
+    }else{
+        //stop analysing pitch
+        clearInterval(freqCallbackId);
+        oscPlaying = false;
+        //disconnect the osc from the analyser.
+        osc.disconnect();
+    }
+}
+
+function createOsc(){
+    //setup oscillator
+    osc = audioContext.createOscillator();
+    osc.frequency.value = 250;
+    osc.start();
+
+    //setup vibrato (lfo controlled detune)
+    var vib = audioContext.createOscillator();
+    var vibGain = audioContext.createGain();
+    vib.frequency.value = 6; //hz
+    vib.connect(vibGain);
+    vibGain.gain.value = 5;
+    vibGain.connect(osc.frequency);
+    vib.start();
 }
 
 function playUploadedFile(){
-    sourceNode = uploadedAudioFile;
-    sourceNode.loop = true;
+    if(isPlaying){
+        audioElement.pause();
+        clearInterval(freqCallbackId);
+        isPlaying=false;
+        sourceNode.disconnect();
+    }else{
+        sourceNode = uploadedAudioFile;
+        sourceNode.loop = true;
+        sourceNode.connect(gain);
+        gain.gain.value=0.9;
 
-    var gain = audioContext.createGain();
-    gain.gain.value = 1.5;
+        audioElement.play();
+        isPlaying = true;
+        startPitchDetection();
+    }
 
-    sourceNode.connect(gain);
-
-    analyser = audioContext.createAnalyser();
-    analyser.fftSize = 2048;
-    gain.connect( analyser );
-
-    analyser.connect(audioContext.destination);
-
-    audioElement.play();
-    isPlaying = true;
-    updatePitch();
-
-    freqCallbackId = setInterval(getFreq,freqBufferPeriod);
 }
