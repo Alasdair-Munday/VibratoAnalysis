@@ -24,7 +24,7 @@ var audioElement = null;
 var freqBufferLength = 30;
 var freqBufferPeriod = 20;
 var freqBufferSampleRate = 1/(freqBufferPeriod/1000);
-var recordedFreqsSecond = new Array(freqBufferLength).fill(0);
+var recordedFreqs = new Array(freqBufferLength).fill(0);
 var oscPlaying = false;
 var osc = null;
 var exampleUrl = "247561__bwv662__overall-quality-of-single-note-cello-g4.wav";
@@ -52,7 +52,13 @@ window.onload = function() {
     gain = audioContext.createGain();
     analyser = audioContext.createAnalyser();
     analyser.fftSize = 2048;
-    gain.connect( analyser );
+
+    var lpf = audioContext.createBiquadFilter();
+    lpf.frequency.value = 500;
+    lpf.type='bandpass';
+
+    gain.connect( lpf );
+    lpf.connect(analyser);
     analyser.connect(audioContext.destination);
 
 };
@@ -82,6 +88,7 @@ function loadFile(obj) {
 
 function toggleLiveInput() {
     if(!isPlaying) {
+        analyser.disconnect();
         //get microphone input
         navigator.getUserMedia(
             {
@@ -98,6 +105,7 @@ function toggleLiveInput() {
     }else{
         clearInterval(freqCallbackId);
         mediaStreamSource.disconnect();
+        analyser.connect(audioContext.destination);
         isPlaying = false;
     }
 }

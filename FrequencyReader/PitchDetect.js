@@ -6,10 +6,10 @@
  */
 
 //setup parameters of vibrato detection
-var amountMax = 60;
-var amountMin = 0;
-var rateMax = 10;
-var rateMin = 3.5;
+var amountMax = 40;
+var amountMin = 10;
+var rateMax = 8;
+var rateMin = 4;
 
 if (!window.requestAnimationFrame)
     window.requestAnimationFrame = window.webkitRequestAnimationFrame;
@@ -70,8 +70,8 @@ function startPitchDetection(){
 function updatePitch( time ) {
 
     //unfurl  frequency buffer into chronological order
-    var freqs = recordedFreqsSecond.slice((recordedFreqsIndex+1) % freqBufferLength, recordedFreqsSecond.length - 1);
-    freqs = freqs.concat(recordedFreqsSecond.slice(0,recordedFreqsIndex % freqBufferLength));
+    var freqs = recordedFreqs.slice((recordedFreqsIndex+1) % freqBufferLength, recordedFreqs.length - 1);
+    freqs = freqs.concat(recordedFreqs.slice(0,recordedFreqsIndex % freqBufferLength));
 
     //print the note name and frequency to the view
     var note = noteFromFrequency(freqs[freqs.length-1]);
@@ -111,7 +111,7 @@ function updatePitch( time ) {
     window.requestAnimationFrame( updatePitch );
 }
 
-//
+//the order of the moving ag
 var filterLength = 5;
 var freqBuff = new Array(filterLength).fill(0);
 var buffIndex = 0;
@@ -123,7 +123,7 @@ function getFreq(){
     buffIndex = (buffIndex +1 ) % filterLength;
 
     //get average from filter buffer for next frequency values
-    recordedFreqsSecond[recordedFreqsIndex++ % freqBufferLength] = freqBuff.reduce(function (a, b) {
+    recordedFreqs[recordedFreqsIndex++ % freqBufferLength] = freqBuff.reduce(function (a, b) {
             return a + b
         }) / filterLength;
 
