@@ -18,15 +18,13 @@ var analyser = null;
 var gain = null;
 var mediaStreamSource = null;
 var waveCanvas;
-var sourceNode =  null;
 var isPlaying = false;
 var uploadedAudioFile = null;
 var audioElement = null;
-var recordedFreqs = [];
 var freqBufferLength = 30;
 var freqBufferPeriod = 20;
 var freqBufferSampleRate = 1/(freqBufferPeriod/1000);
-var recordedFreqsSecond = new Array(freqBufferLength).fill(0);
+var recordedFreqs = new Array(freqBufferLength).fill(0);
 var oscPlaying = false;
 var osc = null;
 var exampleUrl = "247561__bwv662__overall-quality-of-single-note-cello-g4.wav";
@@ -54,7 +52,13 @@ window.onload = function() {
     gain = audioContext.createGain();
     analyser = audioContext.createAnalyser();
     analyser.fftSize = 2048;
-    gain.connect( analyser );
+
+    var lpf = audioContext.createBiquadFilter();
+    lpf.frequency.value = 500;
+    lpf.type='bandpass';
+
+    gain.connect( lpf );
+    lpf.connect(analyser);
     analyser.connect(audioContext.destination);
 
 };
@@ -84,6 +88,7 @@ function loadFile(obj) {
 
 function toggleLiveInput() {
     if(!isPlaying) {
+        analyser.disconnect();
         //get microphone input
         navigator.getUserMedia(
             {
@@ -100,6 +105,7 @@ function toggleLiveInput() {
     }else{
         clearInterval(freqCallbackId);
         mediaStreamSource.disconnect();
+        analyser.connect(audioContext.destination);
         isPlaying = false;
     }
 }
@@ -161,19 +167,25 @@ function createOsc(){
 }
 
 function playUploadedFile(){
+
     if(isPlaying){
+        //pause the audio
         audioElement.pause();
+        //stop updating frequency
         clearInterval(freqCallbackId);
         isPlaying=false;
-        sourceNode.disconnect();
+        //disconnect the audio from the analyser
+        uploadedAudioFile.disconnect();
     }else{
-        sourceNode = uploadedAudioFile;
-        sourceNode.loop = true;
-        sourceNode.connect(gain);
+        //connect the audio element's node to the analyser
+        uploadedAudioFile.connect(gain);
         gain.gain.value=0.9;
 
+        //play the audio file
         audioElement.play();
         isPlaying = true;
+
+        //start detecting vibrato
         startPitchDetection();
     }
 
