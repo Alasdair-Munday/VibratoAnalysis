@@ -53,12 +53,13 @@ window.onload = function() {
     analyser = audioContext.createAnalyser();
     analyser.fftSize = 2048;
 
+    //setup anti noise filter
     var lpf = audioContext.createBiquadFilter();
     lpf.frequency.value = 500;
-    lpf.type='bandpass';
 
-    gain.connect( lpf );
-    lpf.connect(analyser);
+    //set up audio graph
+    gain.connect( analyser );
+    //lpf.connect(analyser);
     analyser.connect(audioContext.destination);
 
 };
@@ -86,7 +87,7 @@ function loadFile(obj) {
     audioElement.src = URL.createObjectURL(obj.files[0]);
 }
 
-function toggleLiveInput() {
+function toggleMicrophone() {
     if(!isPlaying) {
         analyser.disconnect();
         //get microphone input
@@ -103,8 +104,11 @@ function toggleLiveInput() {
                 }
             }, gotStream, error);
     }else{
+        //stop updating pitch
         clearInterval(freqCallbackId);
+        //disconnect the input from the analyser
         mediaStreamSource.disconnect();
+        //reconnect the alayser to the speakers
         analyser.connect(audioContext.destination);
         isPlaying = false;
     }
@@ -161,7 +165,7 @@ function createOsc(){
     var vibGain = audioContext.createGain();
     vib.frequency.value = 6; //hz
     vib.connect(vibGain);
-    vibGain.gain.value = 5;
+    vibGain.gain.value = 4;
     vibGain.connect(osc.frequency);
     vib.start();
 }

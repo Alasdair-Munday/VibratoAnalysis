@@ -64,10 +64,10 @@ function startPitchDetection(){
 
     //start loops for new inputs.
     freqCallbackId = setInterval(getFreq,freqBufferPeriod);
-    updatePitch();
+    updateView();
 }
 
-function updatePitch( time ) {
+function updateView(time ) {
 
     //unfurl  frequency buffer into chronological order
     var freqs = recordedFreqs.slice((recordedFreqsIndex+1) % freqBufferLength, recordedFreqs.length - 1);
@@ -82,7 +82,7 @@ function updatePitch( time ) {
     var vibrato = getVibrato(freqs,freqBufferSampleRate);
 
     //if vibrato is detected
-    if(vibrato.rate >0) {
+    if(vibrato.rate > 0 && vibrato.amount) {
         //update gauges
         rateGauge.setData(vibrato.rate);
         amountGauge.setData(vibrato.amount);
@@ -108,11 +108,12 @@ function updatePitch( time ) {
     waveCanvas.stroke();
 
     //re-call this on next frame
-    window.requestAnimationFrame( updatePitch );
+    window.requestAnimationFrame( updateView );
 }
 
-//the order of the moving ag
+//the order of the moving avg filter
 var filterLength = 5;
+//buffer for the filter
 var freqBuff = new Array(filterLength).fill(0);
 var buffIndex = 0;
 var recordedFreqsIndex = 0;
