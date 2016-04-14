@@ -79,7 +79,7 @@ function getVibrato(buffer, sampleRate){
     //centre and scale buffer to (-1 -> 1)
     for(var i= 0; i< buffer.length; i++){
         buffer[i] -= avg;
-        buffer[i] = buffer[i]/vib.amount;
+        buffer[i] = buffer[i]/vib.amountHz ||0;
     }
 
     //autocorrelate transformed buffer
