@@ -6,7 +6,7 @@
  */
 
 //setup parameters of vibrato detection
-var amountMax = 40;
+var amountMax = 80;
 var amountMin = 10;
 var rateMax = 8;
 var rateMin = 4;
